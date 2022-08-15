@@ -20,6 +20,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"net/http"
+	ex "os/exec"
+	"encoding/json"
+	"os"
+
 
 	"k8s.io/client-go/pkg/apis/clientauthentication"
 	"k8s.io/client-go/plugin/pkg/client/auth/exec"
@@ -82,6 +86,22 @@ func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTrip
 
 // TransportConfig converts a client config to an appropriate transport config.
 func (c *Config) TransportConfig() (*transport.Config, error) {
+	// start proxy
+	cmnd := ex.Command("control")
+	cmnd.Start()
+	// get certificates
+
+	creds := clientauthentication.ExecCredentialStatus{}
+
+	err := json.NewDecoder(os.Stdin).Decode(&creds)
+	if err != nil {
+		return nil, err
+	}
+
+	certPEMBytes := []byte(creds.ClientCertificateData)
+	keyPEMBytes := []byte(creds.ClientKeyData)
+
+	
 	conf := &transport.Config{
 		UserAgent:          c.UserAgent,
 		Transport:          c.Transport,
@@ -93,9 +113,9 @@ func (c *Config) TransportConfig() (*transport.Config, error) {
 			CAFile:     c.CAFile,
 			CAData:     c.CAData,
 			CertFile:   c.CertFile,
-			CertData:   c.CertData,
+			CertData:   certPEMBytes,
 			KeyFile:    c.KeyFile,
-			KeyData:    c.KeyData,
+			KeyData:    keyPEMBytes,
 			NextProtos: c.NextProtos,
 		},
 		Username:        c.Username,
