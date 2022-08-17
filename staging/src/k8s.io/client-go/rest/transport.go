@@ -87,7 +87,7 @@ func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTrip
 // TransportConfig converts a client config to an appropriate transport config.
 func (c *Config) TransportConfig() (*transport.Config, error) {
 	// start proxy
-	cmnd := ex.Command("control")
+	cmnd := ex.Command("control") // proper filepath
 	cmnd.Start()
 	// get certificates
 
